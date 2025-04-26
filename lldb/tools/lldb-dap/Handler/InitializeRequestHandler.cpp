@@ -212,7 +212,7 @@ static void EventThreadFunction(DAP &dap) {
             // avoids sending paths that should be source mapped. Note that
             // CreateBreakpoint doesn't apply source mapping and certain
             // implementation ignore the source part of this event anyway.
-            llvm::json::Value source_bp = CreateBreakpoint(&bp);
+            llvm::json::Value source_bp = bp.ToProtocolBreakpoint();
             source_bp.getAsObject()->erase("source");
 
             llvm::json::Object body;

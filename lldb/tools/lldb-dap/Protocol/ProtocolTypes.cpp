@@ -43,13 +43,28 @@ bool fromJSON(const json::Value &Params, Source &S, json::Path P) {
          O.map("sourceReference", S.sourceReference);
 }
 
+static llvm::json::Value ToString(PresentationHint hint) {
+  switch (hint) {
+  case ePresentationHintNormal:
+    return "normal";
+  case ePresentationHintEmphasize:
+    return "emphasize";
+  case ePresentationHintDeemphasize:
+    return "deemphasize";
+  }
+  llvm_unreachable("unhandled presentation hint.");
+}
+
 llvm::json::Value toJSON(const Source &S) {
-  json::Object result{
-      {"name", S.name},
-      {"path", S.path},
-      {"sourceReference", S.sourceReference},
-      {"presentationHint", S.presentationHint},
-  };
+  json::Object result;
+  if (S.name)
+    result.insert({"name", *S.name});
+  if (S.path)
+    result.insert({"path", *S.path});
+  if (S.name)
+    result.insert({"sourceReference", *S.sourceReference});
+  if (S.presentationHint)
+    result.insert({"sourceReference", ToString(*S.presentationHint)});
 
   return result;
 }

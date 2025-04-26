@@ -506,7 +506,7 @@ struct DataBreakpointInfoArguments {
   /// When `name` is an expression, evaluate it in the scope of this stack
   /// frame. If not specified, the expression is evaluated in the global scope.
   /// When `asAddress` is true, the `frameId` is ignored.
-  std::optional<int64_t> frameId;
+  std::optional<uint64_t> frameId;
 
   /// If specified, a debug adapter should return information for the range of
   /// memory extending `bytes` number of bytes from the address or variable
@@ -539,7 +539,7 @@ struct DataBreakpointInfoResponseBody {
   /// for details. Breakpoints set using the `dataId` in the
   /// `setDataBreakpoints` request may outlive the lifetime of the associated
   /// `dataId`.
-  std::optional<std::string> dataId;
+  std::optional<std::optional<std::string>> dataId;
 
   /// UI string that describes on what data the breakpoint is set on or why a
   /// data breakpoint is not available.

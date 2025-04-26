@@ -273,6 +273,7 @@ enum PresentationHint : unsigned {
   ePresentationHintEmphasize,
   ePresentationHintDeemphasize,
 };
+llvm::json::Value toJSON(const PresentationHint &);
 
 /// A `Source` is a descriptor for source code. It is returned from the debug
 /// adapter as part of a `StackFrame` and it is used by clients when specifying

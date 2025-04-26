@@ -28,7 +28,7 @@ public:
   void SetCondition() override;
   void SetHitCondition() override;
 
-  protocol::Breakpoint ToProtocolBreakpoint();
+  protocol::Breakpoint ToProtocolBreakpoint() override;
 
   void SetWatchpoint();
 
