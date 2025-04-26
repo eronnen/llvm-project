@@ -393,6 +393,18 @@ bool fromJSON(const llvm::json::Value &Params, DataBreakpointAccessType &DBAT,
   return true;
 }
 
+llvm::json::Value toJSON(const DataBreakpointAccessType &DBAT) {
+  switch (DBAT) {
+  case eDataBreakpointAccessTypeRead:
+    return "read";
+  case eDataBreakpointAccessTypeWrite:
+    return "write";
+  case eDataBreakpointAccessTypeReadWrite:
+    return "readWrite";
+  }
+  llvm_unreachable("unhandled data breakpoint access type.");
+}
+
 bool fromJSON(const llvm::json::Value &Params, DataBreakpointInfo &DBI,
               llvm::json::Path P) {
   json::ObjectMapper O(Params, P);

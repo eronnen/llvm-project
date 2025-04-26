@@ -273,7 +273,6 @@ enum PresentationHint : unsigned {
   ePresentationHintEmphasize,
   ePresentationHintDeemphasize,
 };
-llvm::json::Value toJSON(const PresentationHint &);
 
 /// A `Source` is a descriptor for source code. It is returned from the debug
 /// adapter as part of a `StackFrame` and it is used by clients when specifying
@@ -453,6 +452,7 @@ enum DataBreakpointAccessType : unsigned {
 };
 bool fromJSON(const llvm::json::Value &, DataBreakpointAccessType &,
               llvm::json::Path);
+llvm::json::Value toJSON(const DataBreakpointAccessType &);
 
 /// Properties of a data breakpoint passed to the `setDataBreakpoints` request.
 struct DataBreakpointInfo {

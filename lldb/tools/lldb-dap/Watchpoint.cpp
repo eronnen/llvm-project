@@ -46,6 +46,8 @@ protocol::Breakpoint Watchpoint::ToProtocolBreakpoint() {
   } else {
     breakpoint.verified = true;
   }
+
+  return breakpoint;
 }
 
 void Watchpoint::SetWatchpoint() {
