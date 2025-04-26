@@ -26,7 +26,8 @@ public:
 
   void SetCondition() override;
   void SetHitCondition() override;
-  void CreateJsonObject(llvm::json::Object &object) override;
+
+  protocol::Breakpoint ToProtocolBreakpoint() override;
 
   bool MatchesName(const char *name);
   void SetBreakpoint();
