@@ -354,15 +354,16 @@ public:
 };
 
 class SetExceptionBreakpointsRequestHandler
-    : public RequestHandler<protocol::SetExceptionBreakpointsArguments,
-                            protocol::SetExceptionBreakpointsResponseBody> {
+    : public RequestHandler<
+          protocol::SetExceptionBreakpointsArguments,
+          llvm::Expected<protocol::SetExceptionBreakpointsResponseBody>> {
 public:
   using RequestHandler::RequestHandler;
   static llvm::StringLiteral GetCommand() { return "setExceptionBreakpoints"; }
   FeatureSet GetSupportedFeatures() const override {
     return {protocol::eAdapterFeatureExceptionOptions};
   }
-  protocol::SetExceptionBreakpointsResponseBody
+  llvm::Expected<protocol::SetExceptionBreakpointsResponseBody>
   Run(const protocol::SetExceptionBreakpointsArguments &args) const override;
 };
 

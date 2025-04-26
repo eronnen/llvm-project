@@ -335,6 +335,12 @@ bool fromJSON(const llvm::json::Value &Params,
          O.map("exceptionOptions", SEBA.exceptionOptions);
 }
 
+llvm::json::Value toJSON(const SetExceptionBreakpointsResponseBody &SEBR) {
+  json::Object result;
+  result["breakpoints"] = SEBR.breakpoints;
+  return result;
+}
+
 bool fromJSON(const llvm::json::Value &Params,
               SetInstructionBreakpointsArguments &SIBA, llvm::json::Path P) {
   json::ObjectMapper O(Params, P);
