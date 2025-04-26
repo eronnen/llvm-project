@@ -302,6 +302,7 @@ struct Source {
   // unsupported keys: origin, sources, adapterData, checksums
 };
 bool fromJSON(const llvm::json::Value &, Source &, llvm::json::Path);
+llvm::json::Value toJSON(const Source &);
 
 /// The granularity of one `step` in the stepping requests `next`, `stepIn`,
 /// `stepOut` and `stepBack`.
@@ -321,6 +322,247 @@ enum SteppingGranularity : unsigned {
 };
 bool fromJSON(const llvm::json::Value &, SteppingGranularity &,
               llvm::json::Path);
+
+/// Information about a breakpoint created in `setBreakpoints`,
+/// `setFunctionBreakpoints`, `setInstructionBreakpoints`, or
+/// `setDataBreakpoints` requests.
+struct Breakpoint {
+  /// A machine-readable explanation of why a breakpoint may not be verified.
+  enum class Reason : unsigned {
+    /// Indicates a breakpoint might be verified in the future, but
+    /// the adapter cannot verify it in the current state.
+    eBreakpointReasonPending,
+    /// Indicates a breakpoint was not able to be verified, and the
+    /// adapter does not believe it can be verified without intervention.
+    eBreakpointReasonFailed,
+  };
+
+  /// The identifier for the breakpoint. It is needed if breakpoint events are
+  /// used to update or remove breakpoints.
+  std::optional<int> id;
+
+  /// If true, the breakpoint could be set (but not necessarily at the desired
+  /// location).
+  bool verified;
+
+  /// A message about the state of the breakpoint.
+  /// This is shown to the user and can be used to explain why a breakpoint
+  /// could not be verified.
+  std::optional<std::string> message;
+
+  /// The source where the breakpoint is located.
+  std::optional<Source> source;
+
+  /// The start line of the actual range covered by the breakpoint.
+  std::optional<uint32_t> line;
+
+  /// Start position of the source range covered by the breakpoint. It is
+  /// measured in UTF-16 code units and the client capability `columnsStartAt1`
+  /// determines whether it is 0- or 1-based.
+  std::optional<uint32_t> column;
+
+  /// The end line of the actual range covered by the breakpoint.
+  std::optional<uint32_t> endLine;
+
+  /// End position of the source range covered by the breakpoint. It is measured
+  /// in UTF-16 code units and the client capability `columnsStartAt1`
+  /// determines whether it is 0- or 1-based. If no end line is given, then the
+  /// end column is assumed to be in the start line.
+  std::optional<uint32_t> endColumn;
+
+  /// A memory reference to where the breakpoint is set.
+  std::optional<std::string> instructionReference;
+
+  /// The offset from the instruction reference.
+  /// This can be negative.
+  std::optional<int32_t> offset;
+
+  /// A machine-readable explanation of why a breakpoint may not be verified. If
+  /// a breakpoint is verified or a specific reason is not known, the adapter
+  /// should omit this property.
+  std::optional<Reason> reason;
+};
+llvm::json::Value toJSON(const Breakpoint &);
+
+/// Properties of a breakpoint or logpoint passed to the `setBreakpoints`
+/// request
+struct SourceBreakpoint {
+  /// The source line of the breakpoint or logpoint.
+  uint32_t line;
+
+  /// Start position within source line of the breakpoint or logpoint. It is
+  /// measured in UTF-16 code units and the client capability `columnsStartAt1`
+  /// determines whether it is 0- or 1-based.
+  std::optional<uint32_t> column;
+
+  /// The expression for conditional breakpoints.
+  /// It is only honored by a debug adapter if the corresponding capability
+  /// `supportsConditionalBreakpoints` is true.
+  std::optional<std::string> condition;
+
+  /// The expression that controls how many hits of the breakpoint are ignored.
+  /// The debug adapter is expected to interpret the expression as needed.
+  /// The attribute is only honored by a debug adapter if the corresponding
+  /// capability `supportsHitConditionalBreakpoints` is true.
+  /// If both this property and `condition` are specified, `hitCondition` should
+  /// be evaluated only if the `condition` is met, and the debug adapter should
+  /// stop only if both conditions are met.
+  std::optional<std::string> hitCondition;
+
+  /// If this attribute exists and is non-empty, the debug adapter must not
+  /// 'break' (stop)
+  /// but log the message instead. Expressions within `{}` are interpolated.
+  /// The attribute is only honored by a debug adapter if the corresponding
+  /// capability `supportsLogPoints` is true.
+  /// If either `hitCondition` or `condition` is specified, then the message
+  /// should only be logged if those conditions are met.
+  std::optional<std::string> logMessage;
+
+  /// The mode of this breakpoint. If defined, this must be one of the
+  /// `breakpointModes` the debug adapter advertised in its `Capabilities`.
+  std::optional<std::string> mode;
+};
+bool fromJSON(const llvm::json::Value &, SourceBreakpoint &, llvm::json::Path);
+
+/// Properties of a breakpoint passed to the `setFunctionBreakpoints` request.
+struct FunctionBreakpoint {
+  /// The name of the function.
+  std::string name;
+
+  /// An expression for conditional breakpoints.
+  /// It is only honored by a debug adapter if the corresponding capability
+  /// `supportsConditionalBreakpoints` is true.
+  std::optional<std::string> condition;
+
+  /// An expression that controls how many hits of the breakpoint are ignored.
+  /// The debug adapter is expected to interpret the expression as needed.
+  /// The attribute is only honored by a debug adapter if the corresponding
+  /// capability `supportsHitConditionalBreakpoints` is true.
+  std::optional<std::string> hitCondition;
+};
+bool fromJSON(const llvm::json::Value &, FunctionBreakpoint &,
+              llvm::json::Path);
+
+/// This enumeration defines all possible access types for data breakpoints.
+/// Values: ‘read’, ‘write’, ‘readWrite’
+enum DataBreakpointAccessType : unsigned {
+  eDataBreakpointAccessTypeRead,
+  eDataBreakpointAccessTypeWrite,
+  eDataBreakpointAccessTypeReadWrite
+};
+bool fromJSON(const llvm::json::Value &, DataBreakpointAccessType &,
+              llvm::json::Path);
+llvm::json::Value toJSON(const DataBreakpointAccessType &);
+
+/// Properties of a data breakpoint passed to the `setDataBreakpoints` request.
+struct DataBreakpointInfo {
+  /// An id representing the data. This id is returned from the
+  /// `dataBreakpointInfo` request.
+  std::string dataId;
+
+  /// The access type of the data.
+  std::optional<DataBreakpointAccessType> accessType;
+
+  /// An expression for conditional breakpoints.
+  std::optional<std::string> condition;
+
+  /// An expression that controls how many hits of the breakpoint are ignored.
+  /// The debug adapter is expected to interpret the expression as needed.
+  std::optional<std::string> hitCondition;
+};
+bool fromJSON(const llvm::json::Value &, DataBreakpointInfo &,
+              llvm::json::Path);
+
+/// Properties of a breakpoint passed to the `setInstructionBreakpoints` request
+struct InstructionBreakpoint {
+  /// The instruction reference of the breakpoint.
+  /// This should be a memory or instruction pointer reference from an
+  /// `EvaluateResponse`, `Variable`, `StackFrame`, `GotoTarget`, or
+  /// `Breakpoint`.
+  std::string instructionReference;
+
+  /// The offset from the instruction reference in bytes.
+  /// This can be negative.
+  std::optional<int32_t> offset;
+
+  /// An expression for conditional breakpoints.
+  /// It is only honored by a debug adapter if the corresponding capability
+  /// `supportsConditionalBreakpoints` is true.
+  std::optional<std::string> condition;
+
+  /// An expression that controls how many hits of the breakpoint are ignored.
+  /// The debug adapter is expected to interpret the expression as needed.
+  /// The attribute is only honored by a debug adapter if the corresponding
+  /// capability `supportsHitConditionalBreakpoints` is true.
+  std::optional<std::string> hitCondition;
+
+  /// The mode of this breakpoint. If defined, this must be one of the
+  /// `breakpointModes` the debug adapter advertised in its `Capabilities`.
+  std::optional<std::string> mode;
+};
+bool fromJSON(const llvm::json::Value &, InstructionBreakpoint &,
+              llvm::json::Path);
+
+/// An ExceptionFilterOptions is used to specify an exception filter together
+/// with a condition for the `setExceptionBreakpoints` request.
+struct ExceptionFilterOptions {
+  /// ID of an exception filter returned by the `exceptionBreakpointFilters`
+  /// capability.
+  std::string filterId;
+
+  /// An expression for conditional exceptions.
+  /// The exception breaks into the debugger if the result of the condition is
+  /// true.
+  std::optional<std::string> condition;
+
+  /// The mode of this exception breakpoint. If defined, this must be one of the
+  /// `breakpointModes` the debug adapter advertised in its `Capabilities`.
+  std::optional<std::string> mode;
+};
+bool fromJSON(const llvm::json::Value &, ExceptionFilterOptions &,
+              llvm::json::Path);
+
+/// This enumeration defines all possible conditions when a thrown exception
+/// should result in a break.
+enum ExceptionBreakMode : unsigned {
+  /// Never breaks.
+  eExceptionBreakModeNever,
+  /// Always breaks.
+  eExceptionBreakModeAlways,
+  /// Breaks when the exception is unhandled.
+  eExceptionBreakModeUnhandled,
+  /// Breaks if the exception is not handled by user code.
+  eExceptionBreakModeUserUnhandled
+};
+bool fromJSON(const llvm::json::Value &, ExceptionBreakMode &,
+              llvm::json::Path);
+
+/// An ExceptionPathSegment represents a segment in a path that is used to
+/// match leafs or nodes in a tree of exceptions.
+struct ExceptionPathSegment {
+  /// If false or missing, this segment matches the names provided. Otherwise,
+  /// it matches anything except the names provided.
+  std::optional<bool> negate;
+
+  /// Depending on the value of `negate`, the names that should match or not
+  /// match.
+  std::vector<std::string> names;
+};
+bool fromJSON(const llvm::json::Value &, ExceptionPathSegment &,
+              llvm::json::Path);
+
+/// ExceptionOptions assigns configuration options to a set of exceptions.
+struct ExceptionOptions {
+  /// A path that selects a single or multiple exceptions in a tree. If `path`
+  /// is missing, the whole tree is selected.
+  /// By convention, the first segment of the path is a category that is used
+  /// to group exceptions in the UI.
+  std::optional<std::vector<ExceptionPathSegment>> path;
+
+  /// Condition when a thrown exception should result in a break.
+  ExceptionBreakMode breakMode;
+};
+bool fromJSON(const llvm::json::Value &, ExceptionOptions &, llvm::json::Path);
 
 } // namespace lldb_dap::protocol
 
