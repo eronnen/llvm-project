@@ -43,6 +43,17 @@ bool fromJSON(const json::Value &Params, Source &S, json::Path P) {
          O.map("sourceReference", S.sourceReference);
 }
 
+llvm::json::Value toJSON(const Source &S) {
+  json::Object result{
+      {"name", S.name},
+      {"path", S.path},
+      {"sourceReference", S.sourceReference},
+      {"presentationHint", S.presentationHint},
+  };
+
+  return result;
+}
+
 json::Value toJSON(const ExceptionBreakpointsFilter &EBF) {
   json::Object result{{"filter", EBF.filter}, {"label", EBF.label}};
 
@@ -252,6 +263,136 @@ bool fromJSON(const llvm::json::Value &Params, SteppingGranularity &SG,
   }
   SG = *granularity;
   return true;
+}
+
+json::Value toJSON(const Breakpoint &BP) {
+  json::Object result{{"verified", BP.verified}};
+
+  if (BP.id)
+    result.insert({"id", *BP.id});
+  if (BP.message)
+    result.insert({"message", *BP.message});
+  if (BP.source)
+    result.insert({"source", *BP.source});
+  if (BP.line)
+    result.insert({"line", *BP.line});
+  if (BP.column)
+    result.insert({"column", *BP.column});
+  if (BP.endLine)
+    result.insert({"endLine", *BP.endLine});
+  if (BP.endColumn)
+    result.insert({"endColumn", *BP.endColumn});
+  if (BP.instructionReference)
+    result.insert({"instructionReference", *BP.instructionReference});
+  if (BP.offset)
+    result.insert({"offset", *BP.offset});
+  if (BP.reason) {
+    switch (*BP.reason) {
+    case Breakpoint::Reason::eBreakpointReasonPending:
+      result.insert({"reason", "pending"});
+      break;
+    case Breakpoint::Reason::eBreakpointReasonFailed:
+      result.insert({"reason", "failed"});
+      break;
+    }
+  }
+
+  return result;
+}
+
+bool fromJSON(const llvm::json::Value &Params, ExceptionBreakMode &EBM,
+              llvm::json::Path P) {
+  auto rawMode = Params.getAsString();
+  if (!rawMode) {
+    P.report("expected a string");
+    return false;
+  }
+  std::optional<ExceptionBreakMode> mode =
+      StringSwitch<std::optional<ExceptionBreakMode>>(*rawMode)
+          .Case("never", eExceptionBreakModeNever)
+          .Case("always", eExceptionBreakModeAlways)
+          .Case("unhandled", eExceptionBreakModeUnhandled)
+          .Case("userUnhandled", eExceptionBreakModeUserUnhandled)
+          .Default(std::nullopt);
+  if (!mode) {
+    P.report("unexpected ExceptionBreakMode value");
+    return false;
+  }
+  EBM = *mode;
+  return true;
+}
+
+bool fromJSON(const llvm::json::Value &Params, ExceptionPathSegment &EPS,
+              llvm::json::Path P) {
+  json::ObjectMapper O(Params, P);
+  return O && O.map("negate", EPS.negate) && O.map("names", EPS.names);
+}
+
+bool fromJSON(const llvm::json::Value &Params, ExceptionOptions &EO,
+              llvm::json::Path P) {
+  json::ObjectMapper O(Params, P);
+  return O && O.map("path", EO.path) && O.map("breakMode", EO.breakMode);
+}
+
+bool fromJSON(const llvm::json::Value &Params, ExceptionFilterOptions &EFO,
+              llvm::json::Path P) {
+  json::ObjectMapper O(Params, P);
+  return O && O.map("filterId", EFO.filterId) &&
+         O.map("condition", EFO.condition) && O.map("mode", EFO.mode);
+}
+
+bool fromJSON(const llvm::json::Value &Params, SourceBreakpoint &SB,
+              llvm::json::Path P) {
+  json::ObjectMapper O(Params, P);
+  return O && O.map("line", SB.line) && O.map("column", SB.column) &&
+         O.map("condition", SB.condition) &&
+         O.map("hitCondition", SB.hitCondition) &&
+         O.map("logMessage", SB.logMessage) && O.map("mode", SB.mode);
+}
+
+bool fromJSON(const llvm::json::Value &Params, FunctionBreakpoint &FB,
+              llvm::json::Path P) {
+  json::ObjectMapper O(Params, P);
+  return O && O.map("name", FB.name) && O.map("condition", FB.condition) &&
+         O.map("hitCondition", FB.hitCondition);
+}
+
+bool fromJSON(const llvm::json::Value &Params, DataBreakpointAccessType &DBAT,
+              llvm::json::Path P) {
+  auto rawAccessType = Params.getAsString();
+  if (!rawAccessType) {
+    P.report("expected a string");
+    return false;
+  }
+  std::optional<DataBreakpointAccessType> accessType =
+      StringSwitch<std::optional<DataBreakpointAccessType>>(*rawAccessType)
+          .Case("read", eDataBreakpointAccessTypeRead)
+          .Case("write", eDataBreakpointAccessTypeWrite)
+          .Case("readWrite", eDataBreakpointAccessTypeReadWrite)
+          .Default(std::nullopt);
+  if (!accessType) {
+    P.report("unexpected value, expected 'read', 'write', or 'readWrite'");
+    return false;
+  }
+  DBAT = *accessType;
+  return true;
+}
+
+bool fromJSON(const llvm::json::Value &Params, DataBreakpointInfo &DBI,
+              llvm::json::Path P) {
+  json::ObjectMapper O(Params, P);
+  return O && O.map("dataId", DBI.dataId) &&
+         O.map("accessType", DBI.accessType) &&
+         O.map("condition", DBI.condition) &&
+         O.map("hitCondition", DBI.hitCondition);
+}
+
+bool fromJSON(const llvm::json::Value &Params, InstructionBreakpoint &IB,
+              llvm::json::Path P) {
+  json::ObjectMapper O(Params, P);
+  return O && O.map("instructionReference", IB.instructionReference) &&
+         O.map("offset", IB.offset) && O.map("condition", IB.condition) &&
+         O.map("hitCondition", IB.hitCondition) && O.map("mode", IB.mode);
 }
 
 } // namespace lldb_dap::protocol

@@ -302,6 +302,7 @@ struct Source {
   // unsupported keys: origin, sources, adapterData, checksums
 };
 bool fromJSON(const llvm::json::Value &, Source &, llvm::json::Path);
+llvm::json::Value toJSON(const Source &);
 
 /// The granularity of one `step` in the stepping requests `next`, `stepIn`,
 /// `stepOut` and `stepBack`.
