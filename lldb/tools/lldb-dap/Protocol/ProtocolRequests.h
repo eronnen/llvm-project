@@ -445,6 +445,34 @@ struct SetExceptionBreakpointsArguments {
   /// capability `supportsExceptionOptions` is true.
   std::optional<std::vector<ExceptionOptions>> exceptionOptions;
 };
+bool fromJSON(const llvm::json::Value &, SetExceptionBreakpointsArguments &,
+              llvm::json::Path);
+
+/// Response to `setExceptionBreakpoints` request.
+/// The response contains an array of Breakpoint objects with information about
+/// each exception breakpoint or filter. The Breakpoint objects are in the same
+/// order as the elements of the filters, filterOptions, exceptionOptions arrays
+/// given as arguments. If both filters and filterOptions are given, the
+/// returned array must start with filters information first, followed by
+/// filterOptions information.
+/// The verified property of a Breakpoint object signals whether the exception
+/// breakpoint or filter could be successfully created and whether the condition
+/// is valid. In case of an error the message property explains the problem. The
+/// id property can be used to introduce a unique ID for the exception
+/// breakpoint or filter so that it can be updated subsequently by sending
+/// breakpoint events. For backward compatibility both the breakpoints array and
+/// the enclosing body are optional. If these elements are missing a client is
+/// not able to show problems for individual exception breakpoints or filters.
+struct SetExceptionBreakpointsResponseBody {
+  /// Information about the exception breakpoints or filters.
+  /// The breakpoints returned are in the same order as the elements of the
+  /// `filters`, `filterOptions`, `exceptionOptions` arrays in the arguments.
+  /// If both `filters` and `filterOptions` are given, the returned array must
+  /// start with `filters` information first, followed by `filterOptions`
+  /// information.
+  std::vector<Breakpoint> breakpoints;
+};
+llvm::json::Value toJSON(const SetExceptionBreakpointsResponseBody &);
 
 /// Arguments for `setInstructionBreakpoints` request.
 struct SetInstructionBreakpointsArguments {
@@ -461,6 +489,88 @@ struct SetInstructionBreakpointsResponseBody {
   std::vector<Breakpoint> breakpoints;
 };
 llvm::json::Value toJSON(const SetInstructionBreakpointsResponseBody &);
+
+/// Arguments for `dataBreakpointInfo` request.
+struct DataBreakpointInfoArguments {
+  /// Reference to the variable container if the data breakpoint is requested
+  /// for a child of the container. The `variablesReference` must have been
+  /// obtained in the current suspended state.See 'Lifetime of Object
+  /// References' in the Overview section for details.
+  std::optional<int64_t> variablesReference;
+
+  /// The name of the variable's child to obtain data breakpoint information
+  /// for. If `variablesReference` isn't specified, this can be an expression,
+  /// or an address if `asAddress` is also true.
+  std::string name;
+
+  /// When `name` is an expression, evaluate it in the scope of this stack
+  /// frame. If not specified, the expression is evaluated in the global scope.
+  /// When `asAddress` is true, the `frameId` is ignored.
+  std::optional<int64_t> frameId;
+
+  /// If specified, a debug adapter should return information for the range of
+  /// memory extending `bytes` number of bytes from the address or variable
+  /// specified by `name`. Breakpoints set using the resulting data ID should
+  /// pause on data access anywhere within that range.
+  /// Clients may set this property only if the `supportsDataBreakpointBytes`
+  /// capability is true.
+  std::optional<int64_t> bytes;
+
+  /// If `true`, the `name` is a memory address and the debugger should
+  /// interpret it as a decimal value, or hex value if it is prefixed with `0x`.
+  /// Clients may set this property only if the `supportsDataBreakpointBytes`
+  /// capability is true.
+  std::optional<bool> asAddress;
+
+  /// The mode of the desired breakpoint. If defined, this must be one of the
+  /// `breakpointModes` the debug adapter advertised in its `Capabilities`.
+  std::optional<std::string> mode;
+};
+bool fromJSON(const llvm::json::Value &, DataBreakpointInfoArguments &,
+              llvm::json::Path);
+
+/// Response to `dataBreakpointInfo` request.
+struct DataBreakpointInfoResponseBody {
+  /// An identifier for the data on which a data breakpoint can be registered
+  /// with the `setDataBreakpoints` request or null if no data breakpoint is
+  /// available. If a `variablesReference` or `frameId` is passed, the `dataId`
+  /// is valid in the current suspended state, otherwise it's valid
+  /// indefinitely. See 'Lifetime of Object References' in the Overview section
+  /// for details. Breakpoints set using the `dataId` in the
+  /// `setDataBreakpoints` request may outlive the lifetime of the associated
+  /// `dataId`.
+  std::optional<std::string> dataId;
+
+  /// UI string that describes on what data the breakpoint is set on or why a
+  /// data breakpoint is not available.
+  std::string description;
+
+  /// Attribute lists the available access types for a potential data
+  /// breakpoint. A UI client could surface this information.
+  std::optional<std::vector<DataBreakpointAccessType>> accessTypes;
+
+  /// Attribute indicates that a potential data breakpoint could be persisted
+  /// across sessions.
+  std::optional<bool> canPersist;
+};
+llvm::json::Value toJSON(const DataBreakpointInfoResponseBody &);
+
+/// Arguments for `setDataBreakpoints` request.
+struct SetDataBreakpointsArguments {
+  /// The contents of this array replaces all existing data breakpoints. An
+  /// empty array clears all data breakpoints.
+  std::vector<DataBreakpointInfo> breakpoints;
+};
+bool fromJSON(const llvm::json::Value &, SetDataBreakpointsArguments &,
+              llvm::json::Path);
+
+/// Response to `setDataBreakpoints` request.
+struct SetDataBreakpointsResponseBody {
+  /// Information about the data breakpoints. The array elements correspond to
+  /// the elements of the input argument `breakpoints` array.
+  std::vector<Breakpoint> breakpoints;
+};
+llvm::json::Value toJSON(const SetDataBreakpointsResponseBody &);
 
 } // namespace lldb_dap::protocol
 
