@@ -45,8 +45,11 @@ SetBreakpointsRequestHandler::Run(
         iv->getSecond().UpdateBreakpoint(src_bp);
 
       protocol::Breakpoint response_bp = iv->getSecond().ToProtocolBreakpoint();
-      if (!path.empty() && !response_bp.source)
+
+      // Use the path from the request if it is set
+      if (!path.empty())
         response_bp.source = CreateSource(path);
+
       if (!response_bp.line)
         response_bp.line = src_bp.GetLine();
       if (!response_bp.column)
