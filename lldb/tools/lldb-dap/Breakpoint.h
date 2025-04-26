@@ -26,7 +26,6 @@ public:
 
   void SetCondition() override;
   void SetHitCondition() override;
-
   protocol::Breakpoint ToProtocolBreakpoint() override;
 
   bool MatchesName(const char *name);

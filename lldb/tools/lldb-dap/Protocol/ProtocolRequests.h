@@ -517,7 +517,7 @@ struct DataBreakpointInfoResponseBody {
   /// for details. Breakpoints set using the `dataId` in the
   /// `setDataBreakpoints` request may outlive the lifetime of the associated
   /// `dataId`.
-  std::optional<std::optional<std::string>> dataId;
+  std::optional<std::string> dataId;
 
   /// UI string that describes on what data the breakpoint is set on or why a
   /// data breakpoint is not available.

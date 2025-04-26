@@ -23,20 +23,21 @@ llvm::Expected<protocol::DataBreakpointInfoResponseBody>
 DataBreakpointInfoRequestHandler::Run(
     const protocol::DataBreakpointInfoArguments &args) const {
   protocol::DataBreakpointInfoResponseBody response;
-  lldb::SBFrame frame = dap.GetLLDBFrame(args.frameId.value_or(0));
+  lldb::SBFrame frame = dap.GetLLDBFrame(args.frameId.value_or(UINT64_MAX));
   lldb::SBValue variable = dap.variables.FindVariable(
       args.variablesReference.value_or(0), args.name);
   std::string addr, size;
 
+  bool is_data_ok = true;
   if (variable.IsValid()) {
     lldb::addr_t load_addr = variable.GetLoadAddress();
     size_t byte_size = variable.GetByteSize();
     if (load_addr == LLDB_INVALID_ADDRESS) {
-      response.dataId = std::nullopt;
+      is_data_ok = false;
       response.description = "does not exist in memory, its location is " +
                              std::string(variable.GetLocation());
     } else if (byte_size == 0) {
-      response.dataId = std::nullopt;
+      is_data_ok = false;
       response.description = "variable size is 0";
     } else {
       addr = llvm::utohexstr(load_addr);
@@ -47,7 +48,7 @@ DataBreakpointInfoRequestHandler::Run(
     if (value.GetError().Fail()) {
       lldb::SBError error = value.GetError();
       const char *error_cstr = error.GetCString();
-      response.dataId = std::nullopt;
+      is_data_ok = false;
       response.description = error_cstr && error_cstr[0]
                                  ? std::string(error_cstr)
                                  : "evaluation failed";
@@ -64,23 +65,23 @@ DataBreakpointInfoRequestHandler::Run(
         // request if SBProcess::GetMemoryRegionInfo returns error.
         if (err.Success()) {
           if (!(region.IsReadable() || region.IsWritable())) {
-            response.dataId = std::nullopt;
+            is_data_ok = false;
             response.description = "memory region for address " + addr +
                                    " has no read or write permissions";
           }
         }
       } else {
-        response.dataId = std::nullopt;
+        is_data_ok = false;
         response.description =
             "unable to get byte size for expression: " + args.name;
       }
     }
   } else {
-    response.dataId = std::nullopt;
+    is_data_ok = false;
     response.description = "variable not found: " + args.name;
   }
 
-  if (!response.dataId.has_value()) {
+  if (is_data_ok) {
     response.dataId = addr + "/" + size;
     response.accessTypes = {protocol::eDataBreakpointAccessTypeRead,
                             protocol::eDataBreakpointAccessTypeWrite,

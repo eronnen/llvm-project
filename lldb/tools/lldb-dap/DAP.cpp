@@ -525,8 +525,9 @@ lldb::SBFrame DAP::GetLLDBFrame(uint64_t frame_id) {
 }
 
 lldb::SBFrame DAP::GetLLDBFrame(const llvm::json::Object &arguments) {
-  const auto frame_id = GetInteger<uint64_t>(arguments, "frameId");
-  return GetLLDBFrame(frame_id.value_or(0));
+  const auto frame_id =
+      GetInteger<uint64_t>(arguments, "frameId").value_or(UINT64_MAX);
+  return GetLLDBFrame(frame_id);
 }
 
 llvm::json::Value DAP::CreateTopLevelScopes() {
