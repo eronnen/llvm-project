@@ -18,7 +18,8 @@ namespace lldb_dap {
 class BreakpointBase {
 public:
   explicit BreakpointBase(DAP &d) : m_dap(d) {}
-  BreakpointBase(DAP &d, const llvm::json::Object &obj);
+  BreakpointBase(DAP &d, const std::optional<std::string> &condition,
+                 const std::optional<std::string> &hit_condition);
   virtual ~BreakpointBase() = default;
 
   virtual void SetCondition() = 0;

@@ -322,7 +322,9 @@ enum SteppingGranularity : unsigned {
 bool fromJSON(const llvm::json::Value &, SteppingGranularity &,
               llvm::json::Path);
 
-/// Information about a breakpoint created in `setBreakpoints`, `setFunctionBreakpoints`, `setInstructionBreakpoints`, or `setDataBreakpoints` requests.
+/// Information about a breakpoint created in `setBreakpoints`,
+/// `setFunctionBreakpoints`, `setInstructionBreakpoints`, or
+/// `setDataBreakpoints` requests.
 struct Breakpoint {
   /// A machine-readable explanation of why a breakpoint may not be verified.
   enum class Reason : unsigned {
@@ -343,8 +345,8 @@ struct Breakpoint {
   bool verified;
 
   /// A message about the state of the breakpoint.
-  /// This is shown to the user and can be used to explain why a breakpoint could
-  /// not be verified.
+  /// This is shown to the user and can be used to explain why a breakpoint
+  /// could not be verified.
   std::optional<std::string> message;
 
   /// The source where the breakpoint is located.
@@ -362,10 +364,9 @@ struct Breakpoint {
   std::optional<uint32_t> endLine;
 
   /// End position of the source range covered by the breakpoint. It is measured
-  /// in UTF-16 code units and the client capability `columnsStartAt1` determines
-  /// whether it is 0- or 1-based.
-  /// If no end line is given, then the end column is assumed to be in the start
-  /// line.
+  /// in UTF-16 code units and the client capability `columnsStartAt1`
+  /// determines whether it is 0- or 1-based. If no end line is given, then the
+  /// end column is assumed to be in the start line.
   std::optional<uint32_t> endColumn;
 
   /// A memory reference to where the breakpoint is set.
@@ -373,7 +374,7 @@ struct Breakpoint {
 
   /// The offset from the instruction reference.
   /// This can be negative.
-  std::optional<int64_t> offset;
+  std::optional<int32_t> offset;
 
   /// A machine-readable explanation of why a breakpoint may not be verified. If
   /// a breakpoint is verified or a specific reason is not known, the adapter
@@ -382,7 +383,8 @@ struct Breakpoint {
 };
 llvm::json::Value toJSON(const Breakpoint &);
 
-/// Properties of a breakpoint or logpoint passed to the `setBreakpoints` request
+/// Properties of a breakpoint or logpoint passed to the `setBreakpoints`
+/// request
 struct SourceBreakpoint {
   /// The source line of the breakpoint or logpoint.
   uint32_t line;
@@ -419,8 +421,7 @@ struct SourceBreakpoint {
   /// `breakpointModes` the debug adapter advertised in its `Capabilities`.
   std::optional<std::string> mode;
 };
-bool fromJSON(const llvm::json::Value &, SourceBreakpoint &,
-              llvm::json::Path);
+bool fromJSON(const llvm::json::Value &, SourceBreakpoint &, llvm::json::Path);
 
 /// Properties of a breakpoint passed to the `setFunctionBreakpoints` request.
 struct FunctionBreakpoint {
@@ -441,7 +442,8 @@ struct FunctionBreakpoint {
 bool fromJSON(const llvm::json::Value &, FunctionBreakpoint &,
               llvm::json::Path);
 
-/// This enumeration defines all possible access types for data breakpoints. Values: ‘read’, ‘write’, ‘readWrite’
+/// This enumeration defines all possible access types for data breakpoints.
+/// Values: ‘read’, ‘write’, ‘readWrite’
 enum DataBreakpointAccessType : unsigned {
   eDataBreakpointAccessTypeRead,
   eDataBreakpointAccessTypeWrite,
@@ -479,7 +481,7 @@ struct InstructionBreakpoint {
 
   /// The offset from the instruction reference in bytes.
   /// This can be negative.
-  std::optional<int64_t> offset;
+  std::optional<int32_t> offset;
 
   /// An expression for conditional breakpoints.
   /// It is only honored by a debug adapter if the corresponding capability
@@ -499,7 +501,8 @@ struct InstructionBreakpoint {
 bool fromJSON(const llvm::json::Value &, InstructionBreakpoint &,
               llvm::json::Path);
 
-/// An ExceptionFilterOptions is used to specify an exception filter together with a condition for the `setExceptionBreakpoints` request.
+/// An ExceptionFilterOptions is used to specify an exception filter together
+/// with a condition for the `setExceptionBreakpoints` request.
 struct ExceptionFilterOptions {
   /// ID of an exception filter returned by the `exceptionBreakpointFilters`
   /// capability.
@@ -557,8 +560,7 @@ struct ExceptionOptions {
   /// Condition when a thrown exception should result in a break.
   ExceptionBreakMode breakMode;
 };
-bool fromJSON(const llvm::json::Value &, ExceptionOptions &,
-              llvm::json::Path);
+bool fromJSON(const llvm::json::Value &, ExceptionOptions &, llvm::json::Path);
 
 } // namespace lldb_dap::protocol
 
