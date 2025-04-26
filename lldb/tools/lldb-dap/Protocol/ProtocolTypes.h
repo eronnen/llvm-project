@@ -499,6 +499,66 @@ struct InstructionBreakpoint {
 bool fromJSON(const llvm::json::Value &, InstructionBreakpoint &,
               llvm::json::Path);
 
+/// An ExceptionFilterOptions is used to specify an exception filter together with a condition for the `setExceptionBreakpoints` request.
+struct ExceptionFilterOptions {
+  /// ID of an exception filter returned by the `exceptionBreakpointFilters`
+  /// capability.
+  std::string filterId;
+
+  /// An expression for conditional exceptions.
+  /// The exception breaks into the debugger if the result of the condition is
+  /// true.
+  std::optional<std::string> condition;
+
+  /// The mode of this exception breakpoint. If defined, this must be one of the
+  /// `breakpointModes` the debug adapter advertised in its `Capabilities`.
+  std::optional<std::string> mode;
+};
+bool fromJSON(const llvm::json::Value &, ExceptionFilterOptions &,
+              llvm::json::Path);
+
+/// This enumeration defines all possible conditions when a thrown exception
+/// should result in a break.
+enum ExceptionBreakMode : unsigned {
+  /// Never breaks.
+  eExceptionBreakModeNever,
+  /// Always breaks.
+  eExceptionBreakModeAlways,
+  /// Breaks when the exception is unhandled.
+  eExceptionBreakModeUnhandled,
+  /// Breaks if the exception is not handled by user code.
+  eExceptionBreakModeUserUnhandled
+};
+bool fromJSON(const llvm::json::Value &, ExceptionBreakMode &,
+              llvm::json::Path);
+
+/// An ExceptionPathSegment represents a segment in a path that is used to
+/// match leafs or nodes in a tree of exceptions.
+struct ExceptionPathSegment {
+  /// If false or missing, this segment matches the names provided. Otherwise,
+  /// it matches anything except the names provided.
+  std::optional<bool> negate;
+
+  /// Depending on the value of `negate`, the names that should match or not
+  /// match.
+  std::vector<std::string> names;
+};
+bool fromJSON(const llvm::json::Value &, ExceptionPathSegment &,
+              llvm::json::Path);
+
+/// ExceptionOptions assigns configuration options to a set of exceptions.
+struct ExceptionOptions {
+  /// A path that selects a single or multiple exceptions in a tree. If `path`
+  /// is missing, the whole tree is selected.
+  /// By convention, the first segment of the path is a category that is used
+  /// to group exceptions in the UI.
+  std::optional<std::vector<ExceptionPathSegment>> path;
+
+  /// Condition when a thrown exception should result in a break.
+  ExceptionBreakMode breakMode;
+};
+bool fromJSON(const llvm::json::Value &, ExceptionOptions &,
+              llvm::json::Path);
 
 } // namespace lldb_dap::protocol
 

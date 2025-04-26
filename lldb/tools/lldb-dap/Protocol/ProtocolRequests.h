@@ -377,6 +377,91 @@ bool fromJSON(const llvm::json::Value &, StepOutArguments &, llvm::json::Path);
 /// body field is required.
 using StepOutResponse = VoidResponse;
 
+/// Arguments for `setBreakpoints` request.
+struct SetBreakpointsArguments {
+  /// The source location of the breakpoints; either `source.path` or
+  /// `source.sourceReference` must be specified.
+  Source source;
+
+  /// The code locations of the breakpoints.
+  std::optional<std::vector<SourceBreakpoint>> breakpoints;
+
+  /// Deprecated: The code locations of the breakpoints.
+  std::optional<std::vector<uint32_t>> lines;
+
+  /// A value of true indicates that the underlying source has been modified
+  /// which results in new breakpoint locations.
+  std::optional<bool> sourceModified;
+};
+bool fromJSON(const llvm::json::Value &, SetBreakpointsArguments &,
+              llvm::json::Path);
+
+/// Response to `setBreakpoints` request.
+/// Returned is information about each breakpoint created by this request.
+/// This includes the actual code location and whether the breakpoint could be verified.
+/// The breakpoints returned are in the same order as the elements of the breakpoints
+/// (or the deprecated lines) array in the arguments.
+struct SetBreakpointsResponseBody {
+  /// Information about the breakpoints.
+  /// The array elements are in the same order as the elements of the
+  /// `breakpoints` (or the deprecated `lines`) array in the arguments.
+  std::vector<Breakpoint> breakpoints;
+};
+llvm::json::Value toJSON(const SetBreakpointsResponseBody &);
+
+/// Arguments for `setFunctionBreakpoints` request.
+struct SetFunctionBreakpointsArguments {
+  /// The function names of the breakpoints.
+  std::vector<FunctionBreakpoint> breakpoints;
+};
+bool fromJSON(const llvm::json::Value &, SetFunctionBreakpointsArguments &,
+              llvm::json::Path);
+
+/// Response to `setFunctionBreakpoints` request.
+/// Returned is information about each breakpoint created by this request.
+struct SetFunctionBreakpointsResponseBody {
+  /// Information about the breakpoints. The array elements correspond to the
+  /// elements of the `breakpoints` array.
+  std::vector<Breakpoint> breakpoints;
+};
+llvm::json::Value toJSON(const SetFunctionBreakpointsResponseBody &);
+
+/// Arguments for `setExceptionBreakpoints` request.
+struct SetExceptionBreakpointsArguments {
+  /// Set of exception filters specified by their ID. The set of all possible
+  /// exception filters is defined by the `exceptionBreakpointFilters`
+  /// capability. The `filter` and `filterOptions` sets are additive.
+  std::vector<std::string> filters;
+
+  /// Set of exception filters and their options. The set of all possible
+  /// exception filters is defined by the `exceptionBreakpointFilters`
+  /// capability. This attribute is only honored by a debug adapter if the
+  /// corresponding capability `supportsExceptionFilterOptions` is true. The
+  /// `filter` and `filterOptions` sets are additive.
+  std::optional<std::vector<ExceptionFilterOptions>> filterOptions;
+
+  /// Configuration options for selected exceptions.
+  /// The attribute is only honored by a debug adapter if the corresponding
+  /// capability `supportsExceptionOptions` is true.
+  std::optional<std::vector<ExceptionOptions>> exceptionOptions;
+};
+
+/// Arguments for `setInstructionBreakpoints` request.
+struct SetInstructionBreakpointsArguments {
+  /// The instruction references of the breakpoints.
+  std::vector<InstructionBreakpoint> breakpoints;
+};
+bool fromJSON(const llvm::json::Value &, SetInstructionBreakpointsArguments &,
+              llvm::json::Path);
+
+/// Response to `setInstructionBreakpoints` request.
+struct SetInstructionBreakpointsResponseBody {
+  /// Information about the breakpoints. The array elements correspond to the
+  /// elements of the `breakpoints` array.
+  std::vector<Breakpoint> breakpoints;
+};
+llvm::json::Value toJSON(const SetInstructionBreakpointsResponseBody &);
+
 } // namespace lldb_dap::protocol
 
 #endif
