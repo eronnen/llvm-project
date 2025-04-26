@@ -354,23 +354,6 @@ llvm::json::Value CreateScope(const llvm::StringRef name,
   return llvm::json::Value(std::move(object));
 }
 
-protocol::Breakpoint
-CreateBreakpoint(BreakpointBase *bp,
-                 std::optional<llvm::StringRef> request_path,
-                 std::optional<uint32_t> request_line,
-                 std::optional<uint32_t> request_column) {
-  protocol::Breakpoint breakpoint = bp->ToProtocolBreakpoint();
-  if (request_path && !breakpoint.source)
-    breakpoint.source = CreateSource(*request_path);
-
-  // We try to add request_line as a fallback
-  if (request_line && !breakpoint.line)
-    breakpoint.line = *request_line;
-  if (request_column && !breakpoint.column)
-    breakpoint.column = *request_column;
-  return breakpoint;
-}
-
 static uint64_t GetDebugInfoSizeInSection(lldb::SBSection section) {
   uint64_t debug_info_size = 0;
   llvm::StringRef section_name(section.GetName());
@@ -457,12 +440,6 @@ llvm::json::Value CreateModule(lldb::SBTarget &target, lldb::SBModule &module) {
   if (!version_str.empty())
     object.try_emplace("version", version_str);
   return llvm::json::Value(std::move(object));
-}
-
-void AppendBreakpoint(BreakpointBase *bp, llvm::json::Array &breakpoints,
-                      std::optional<llvm::StringRef> request_path,
-                      std::optional<uint32_t> request_line) {
-  breakpoints.emplace_back(CreateBreakpoint(bp, request_path, request_line));
 }
 
 // "Event": {

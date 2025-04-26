@@ -198,39 +198,6 @@ GetStringMap(const llvm::json::Object &obj, llvm::StringRef key);
 void FillResponse(const llvm::json::Object &request,
                   llvm::json::Object &response);
 
-/// Converts breakpoint location to a debug adapter protocol "Breakpoint".
-///
-/// \param[in] bp
-///     A LLDB breakpoint object to convert into a JSON value
-///
-/// \param[in] request_path
-///     An optional source path to use when creating the "Source" object of this
-///     breakpoint. If not specified, the "Source" object is created from the
-///     breakpoint's address' LineEntry. It is useful to ensure the same source
-///     paths provided by the setBreakpoints request are returned to the IDE.
-///
-/// \param[in] request_line
-///     An optional line to use when creating the resulting "Breakpoint" object.
-///     It is used if the breakpoint has no valid locations.
-///     It is useful to ensure the same line
-///     provided by the setBreakpoints request are returned to the IDE as a
-///     fallback.
-///
-/// \param[in] request_column
-///     An optional column to use when creating the resulting "Breakpoint"
-///     object. It is used if the breakpoint has no valid locations. It is
-///     useful to ensure the same column provided by the setBreakpoints request
-///     are returned to the IDE as a fallback.
-///
-/// \return
-///     A "Breakpoint" JSON object with that follows the formal JSON
-///     definition outlined by Microsoft.
-protocol::Breakpoint
-CreateBreakpoint(BreakpointBase *bp,
-                 std::optional<llvm::StringRef> request_path = std::nullopt,
-                 std::optional<uint32_t> request_line = std::nullopt,
-                 std::optional<uint32_t> request_column = std::nullopt);
-
 /// Converts a LLDB module to a VS Code DAP module for use in "modules" events.
 ///
 /// \param[in] target
