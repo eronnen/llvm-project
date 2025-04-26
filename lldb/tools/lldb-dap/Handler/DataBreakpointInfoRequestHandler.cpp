@@ -23,7 +23,7 @@ llvm::Expected<protocol::DataBreakpointInfoResponseBody>
 DataBreakpointInfoRequestHandler::Run(
     const protocol::DataBreakpointInfoArguments &args) const {
   protocol::DataBreakpointInfoResponseBody response;
-  lldb::SBFrame frame = dap.GetLLDBFrame(args.frameId);
+  lldb::SBFrame frame = dap.GetLLDBFrame(args.frameId.value_or(0));
   lldb::SBValue variable = dap.variables.FindVariable(
       args.variablesReference.value_or(0), args.name);
   std::string addr, size;

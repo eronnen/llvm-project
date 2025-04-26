@@ -515,18 +515,17 @@ lldb::SBThread DAP::GetLLDBThread(const llvm::json::Object &arguments) {
   return target.GetProcess().GetThreadByID(tid);
 }
 
-lldb::SBFrame DAP::GetLLDBFrame(std::optional<uint64_t> frame_id) {
-  uint64_t id = frame_id.value_or(0);
+lldb::SBFrame DAP::GetLLDBFrame(uint64_t frame_id) {
   lldb::SBProcess process = target.GetProcess();
   // Upper 32 bits is the thread index ID
-  lldb::SBThread thread = process.GetThreadByIndexID(GetLLDBThreadIndexID(id));
+  lldb::SBThread thread = process.GetThreadByIndexID(GetLLDBThreadIndexID(frame_id));
   // Lower 32 bits is the frame index
-  return thread.GetFrameAtIndex(GetLLDBFrameID(id));
+  return thread.GetFrameAtIndex(GetLLDBFrameID(frame_id));
 }
 
 lldb::SBFrame DAP::GetLLDBFrame(const llvm::json::Object &arguments) {
   const auto frame_id = GetInteger<uint64_t>(arguments, "frameId");
-  return GetLLDBFrame(frame_id);
+  return GetLLDBFrame(frame_id.value_or(0));
 }
 
 llvm::json::Value DAP::CreateTopLevelScopes() {
