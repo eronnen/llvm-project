@@ -61,10 +61,10 @@ llvm::json::Value toJSON(const Source &S) {
     result.insert({"name", *S.name});
   if (S.path)
     result.insert({"path", *S.path});
-  if (S.name)
+  if (S.sourceReference)
     result.insert({"sourceReference", *S.sourceReference});
   if (S.presentationHint)
-    result.insert({"sourceReference", ToString(*S.presentationHint)});
+    result.insert({"presentationHint", ToString(*S.presentationHint)});
 
   return result;
 }
