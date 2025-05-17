@@ -87,7 +87,7 @@ protocol::Breakpoint Breakpoint::ToProtocolBreakpoint() {
                 .GetSize() +
             1;
 
-        breakpoint.source = CreateAssemblySource(m_dap.target, bp_addr);
+        breakpoint.source = CreateAssemblySource(m_dap.target, bp_addr, true);
       }
     }
   }

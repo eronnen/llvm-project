@@ -97,12 +97,19 @@ SetBreakpointsRequestHandler::SetAssemblyBreakpoints(
     const {
   std::vector<protocol::Breakpoint> response_breakpoints;
   int64_t sourceReference = source.sourceReference.value_or(0);
+  lldb::SBSymbol symbol;
 
-  lldb::SBAddress address(sourceReference, dap.target);
-  if (!address.IsValid())
-    return response_breakpoints;
+  // If adapterData is present then this is a breakpoint from previous session, and its address was not resolved yet
+  if (source.adapterData && source.adapterData->module_path && source.adapterData->symbol_mangled_name) {
 
-  lldb::SBSymbol symbol = address.GetSymbol();
+  } else {
+    lldb::SBAddress address(sourceReference, dap.target);
+    symbol = address.GetSymbol();
+    if (!symbol.IsValid())
+      return response_breakpoints; // Not yet supporting breakpoints in assembly
+                                   // without a valid symbol
+  }
+
   if (!symbol.IsValid())
     return response_breakpoints; // Not yet supporting breakpoints in assembly
                                  // without a valid symbol

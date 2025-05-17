@@ -524,14 +524,17 @@ protocol::Source CreateSource(llvm::StringRef source_path) {
 }
 
 protocol::Source CreateAssemblySource(const lldb::SBTarget &target,
-                                      lldb::SBAddress &address) {
+                                      lldb::SBAddress &address,
+                                      bool add_persistent_data) {
   protocol::Source source;
+  protocol::SourceLLDBData adapterData;
 
   auto symbol = address.GetSymbol();
   std::string name;
   if (symbol.IsValid()) {
     source.sourceReference = symbol.GetStartAddress().GetLoadAddress(target);
     name = symbol.GetName();
+    adapterData.symbol_mangled_name = symbol.GetMangledName();
   } else {
     const auto load_addr = address.GetLoadAddress(target);
     source.sourceReference = load_addr;
@@ -542,15 +545,18 @@ protocol::Source CreateAssemblySource(const lldb::SBTarget &target,
   if (module.IsValid()) {
     lldb::SBFileSpec file_spec = module.GetFileSpec();
     if (file_spec.IsValid()) {
-      lldb::SBStream module_path;
-      if (file_spec.GetPath(module_path)) {
-        std::string path = module_path.GetData();
-        source.path = path + '`' + name;
+      lldb::SBStream module_path_stream;
+      if (file_spec.GetPath(module_path_stream)) {
+        std::string module_path = module_path_stream.GetData();
+        source.path = module_path + '`' + name;
+        adapterData.module_path = module_path;
       }
     }
   }
 
   source.name = std::move(name);
+  if (add_persistent_data && adapterData.module_path && adapterData.symbol_mangled_name)
+    source.adapterData = std::move(adapterData);
 
   // Mark the source as deemphasized since users will only be able to view
   // assembly for these frames.
@@ -686,7 +692,8 @@ CreateStackFrame(lldb::SBFrame &frame, lldb::SBFormat &format,
     auto frame_address = frame.GetPCAddress();
     object.try_emplace("source", CreateAssemblySource(
                                      frame.GetThread().GetProcess().GetTarget(),
-                                     frame_address));
+                                     frame_address,
+                                     false));
 
     // Calculate the line of the current PC from the start of the current
     // symbol.
@@ -703,7 +710,8 @@ CreateStackFrame(lldb::SBFrame &frame, lldb::SBFormat &format,
     auto frame_address = frame.GetPCAddress();
     object.try_emplace("source", CreateAssemblySource(
                                      frame.GetThread().GetProcess().GetTarget(),
-                                     frame_address));
+                                     frame_address,
+                                     false));
     object.try_emplace("line", 1);
     object.try_emplace("column", 1);
   }

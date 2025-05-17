@@ -277,11 +277,15 @@ protocol::Source CreateSource(llvm::StringRef source_path);
 /// \param[in] address
 ///     The address to use when creating the "Source" object.
 ///
+/// \param[in] add_persistent_data
+///     True if should add `adapterData`, which will be used to make this source persistent.
+///
 /// \return
 ///     A "Source" JSON object that follows the formal JSON
 ///     definition outlined by Microsoft.
 protocol::Source CreateAssemblySource(const lldb::SBTarget &target,
-                                      lldb::SBAddress &address);
+                                      lldb::SBAddress &address,
+                                      bool add_persistent_data);
 
 /// Return true if the given line entry should be displayed as assembly.
 ///
